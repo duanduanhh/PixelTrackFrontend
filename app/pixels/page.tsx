@@ -272,11 +272,53 @@ export default function PixelsPage() {
     }
   }
 
-  const copyTrackingCode = (pixel: Pixel) => {
-    // Use HTTPS if backend requires it, otherwise HTTP
-    const trackingUrl = `${TRACK_URL}/${pixel.track_code}`
-    navigator.clipboard.writeText(trackingUrl)
-    alert("追踪链接已复制到剪贴板")
+  const copyTrackingCode = async (pixel: Pixel) => {
+    try {
+      const trackingUrl = `${TRACK_URL}/${pixel.track_code}`
+      if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(trackingUrl)
+        alert('追踪链接已复制到剪贴板')
+        return
+      }
+
+      const textarea = document.createElement('textarea')
+      textarea.value = trackingUrl
+      textarea.setAttribute('readonly', '')
+      textarea.style.position = 'absolute'
+      textarea.style.left = '-9999px'
+      document.body.appendChild(textarea)
+      const selection = document.getSelection()
+      const selectedRange = selection?.rangeCount ? selection.getRangeAt(0) : null
+      textarea.select()
+      try {
+        const ok = document.execCommand('copy')
+        if (ok) {
+          alert('追踪链接已复制到剪贴板')
+          return
+        }
+      } finally {
+        if (selectedRange) {
+          selection?.removeAllRanges()
+          selection?.addRange(selectedRange)
+        }
+        document.body.removeChild(textarea)
+      }
+
+      const pre = document.createElement('pre')
+      pre.textContent = trackingUrl
+      pre.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:16px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.15);z-index:9999;'
+      document.body.appendChild(pre)
+      const range = document.createRange()
+      range.selectNode(pre)
+      const sel = window.getSelection()
+      sel?.removeAllRanges()
+      sel?.addRange(range)
+      alert('无法自动复制，已为你选中文本，请使用 Ctrl/Cmd + C 复制')
+      setTimeout(() => document.body.removeChild(pre), 8000)
+    } catch (err) {
+      console.error('复制失败:', err)
+      alert('复制失败，请手动复制链接')
+    }
   }
 
   const viewAnalytics = (trackCode: string) => {
