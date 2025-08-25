@@ -88,45 +88,144 @@ export default function PixelsPage() {
     }
   }
 
-  const copyTrackingCode = async (pixel: Pixel) => {
+  const copyTrackingCode = useCallback(async (pixel: Pixel) => {
+    const trackingCode = `<img src="${window.location.origin}/track/${pixel.track_code}" width="1" height="1" style="display:none;" />`
+    console.group('复制追踪代码调试信息')
+    console.log('追踪代码:', trackingCode)
+    console.log('环境检测:', {
+      isBrowser: typeof window !== 'undefined',
+      isSecure: window.location.protocol === 'https:',
+      clipboardAPI: !!navigator?.clipboard?.writeText,
+      execCommand: !!document?.execCommand
+    })
+
     try {
-      const trackingCode = `<img src="${window.location.origin}/track/${pixel.track_code}" width="1" height="1" style="display:none;" />`
-      
-      // 方案1：使用Clipboard API（现代浏览器）
-      if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        await navigator.clipboard.writeText(trackingCode)
-        alert("追踪代码已复制到剪贴板")
-        return
+      // 方案1：使用安全的Clipboard API调用
+      if (typeof navigator?.clipboard?.writeText === 'function') {
+        try {
+          console.log('尝试Clipboard API')
+          await navigator.clipboard.writeText(trackingCode)
+          
+          // 在安全环境下验证复制结果
+          if (window.isSecureContext) {
+            try {
+              const copiedText = await navigator.clipboard.readText()
+              console.log('验证复制结果:', copiedText === trackingCode ? '成功' : '失败')
+              if (copiedText !== trackingCode) throw new Error('内容不匹配')
+            } catch (verifyErr) {
+              console.warn('验证失败:', verifyErr)
+              // 不阻断主流程，仅记录警告
+            }
+          }
+          
+          alert("✅ 追踪代码已复制")
+          console.groupEnd()
+          return true
+        } catch (err) {
+          console.error('Clipboard API错误:', err)
+          // 继续尝试其他方案
+        }
       }
       
-      // 方案2：使用execCommand（旧浏览器）
-      if (typeof document !== 'undefined' && document.execCommand) {
+      // 方案2：使用execCommand的可靠实现
+      if (typeof document?.execCommand === 'function') {
+        console.log('尝试execCommand方案')
         const textarea = document.createElement('textarea')
         textarea.value = trackingCode
-        textarea.style.position = 'fixed' // 防止页面滚动
+        textarea.setAttribute('readonly', '')
+        textarea.style.position = 'absolute'
+        textarea.style.left = '-9999px'
         document.body.appendChild(textarea)
+        
+        const selection = document.getSelection()
+        const selectedRange = selection?.rangeCount ? selection.getRangeAt(0) : null
         textarea.select()
         
         try {
           const success = document.execCommand('copy')
-          if (!success) throw new Error('复制失败')
-          alert("追踪代码已复制到剪贴板")
+          console.log('execCommand执行结果:', success)
+          if (!success) throw new Error('复制命令失败')
+          
+          // 恢复原有选区
+          if (selectedRange) {
+            selection?.removeAllRanges()
+            selection?.addRange(selectedRange)
+          }
+          
+          alert("✅ 追踪代码已复制")
+          console.groupEnd()
+          return true
+        } catch (err) {
+          console.error('execCommand错误:', err)
+          // 继续尝试其他方案
         } finally {
           document.body.removeChild(textarea)
         }
-        return
       }
       
-      // 方案3：提示用户手动复制
-      const copyText = window.prompt("请手动复制以下代码", trackingCode)
-      if (copyText === trackingCode) {
-        alert("已选择代码，请按Ctrl+C复制")
+      // 方案3：使用现代剪贴板API的降级方案
+      try {
+        console.log('尝试现代降级方案')
+        const permission = await navigator.permissions.query({ name: 'clipboard-write' })
+        if (permission.state === 'granted' || permission.state === 'prompt') {
+          const blob = new Blob([trackingCode], { type: 'text/plain' })
+          const data = [new ClipboardItem({ 'text/plain': blob })]
+          await navigator.clipboard.write(data)
+          alert("✅ 追踪代码已复制")
+          console.groupEnd()
+          return true
+        }
+      } catch (e) {
+        console.log('现代降级方案失败:', e)
       }
+      
+      // 最终方案：显示可选择的代码块
+      console.log('使用最终手动复制方案')
+      const codeElement = document.createElement('pre')
+      codeElement.textContent = trackingCode
+      codeElement.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        z-index: 9999;
+        max-width: 90vw;
+        overflow: auto;
+      `
+      document.body.appendChild(codeElement)
+      
+      const selectText = (element: HTMLElement) => {
+        const range = document.createRange()
+        range.selectNode(element)
+        window.getSelection()?.removeAllRanges()
+        window.getSelection()?.addRange(range)
+      }
+      
+      selectText(codeElement)
+      alert("代码已自动选中，请按Ctrl+C复制后关闭窗口")
+      
+      return new Promise((resolve) => {
+        const removeElement = () => {
+          document.body.removeChild(codeElement)
+          resolve(true)
+        }
+        
+        codeElement.onclick = removeElement
+        setTimeout(removeElement, 10000) // 10秒后自动移除
+      })
     } catch (err) {
-      console.error('复制失败:', err)
-      alert("复制失败，请手动复制代码")
+      console.error('复制流程错误:', err)
+      alert(`⚠️ 复制失败: ${err.message}\n请手动复制代码:\n${trackingCode}`)
+      console.groupEnd()
+      return false
+    } finally {
+      console.groupEnd()
     }
-  }
+  }, [])
 
   const filteredPixels = (Array.isArray(pixels) ? pixels : []).filter(
     (pixel) => pixel?.name?.toLowerCase().includes(searchTerm.toLowerCase())
