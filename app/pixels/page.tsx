@@ -92,19 +92,35 @@ export default function PixelsPage() {
     try {
       const trackingCode = `<img src="${window.location.origin}/track/${pixel.track_code}" width="1" height="1" style="display:none;" />`
       
-      // 检查是否在浏览器环境且支持Clipboard API
-      if (typeof window !== 'undefined' && navigator.clipboard) {
+      // 方案1：使用Clipboard API（现代浏览器）
+      if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
         await navigator.clipboard.writeText(trackingCode)
         alert("追踪代码已复制到剪贴板")
-      } else {
-        // 回退方案：使用document.execCommand
+        return
+      }
+      
+      // 方案2：使用execCommand（旧浏览器）
+      if (typeof document !== 'undefined' && document.execCommand) {
         const textarea = document.createElement('textarea')
         textarea.value = trackingCode
+        textarea.style.position = 'fixed' // 防止页面滚动
         document.body.appendChild(textarea)
         textarea.select()
-        document.execCommand('copy')
-        document.body.removeChild(textarea)
-        alert("追踪代码已复制到剪贴板")
+        
+        try {
+          const success = document.execCommand('copy')
+          if (!success) throw new Error('复制失败')
+          alert("追踪代码已复制到剪贴板")
+        } finally {
+          document.body.removeChild(textarea)
+        }
+        return
+      }
+      
+      // 方案3：提示用户手动复制
+      const copyText = window.prompt("请手动复制以下代码", trackingCode)
+      if (copyText === trackingCode) {
+        alert("已选择代码，请按Ctrl+C复制")
       }
     } catch (err) {
       console.error('复制失败:', err)
