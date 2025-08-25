@@ -88,10 +88,28 @@ export default function PixelsPage() {
     }
   }
 
-  const copyTrackingCode = (pixel: Pixel) => {
-    const trackingCode = `<img src="${window.location.origin}/track/${pixel.track_code}" width="1" height="1" style="display:none;" />`
-    navigator.clipboard.writeText(trackingCode)
-    alert("追踪代码已复制到剪贴板")
+  const copyTrackingCode = async (pixel: Pixel) => {
+    try {
+      const trackingCode = `<img src="${window.location.origin}/track/${pixel.track_code}" width="1" height="1" style="display:none;" />`
+      
+      // 检查是否在浏览器环境且支持Clipboard API
+      if (typeof window !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(trackingCode)
+        alert("追踪代码已复制到剪贴板")
+      } else {
+        // 回退方案：使用document.execCommand
+        const textarea = document.createElement('textarea')
+        textarea.value = trackingCode
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+        alert("追踪代码已复制到剪贴板")
+      }
+    } catch (err) {
+      console.error('复制失败:', err)
+      alert("复制失败，请手动复制代码")
+    }
   }
 
   const filteredPixels = (Array.isArray(pixels) ? pixels : []).filter(
