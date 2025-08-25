@@ -42,7 +42,7 @@ export default function DashboardPage() {
   const fetchDashboardStats = async () => {
     try {
       // 获取基本统计数据
-      const statsResponse = await fetch("http://127.0.0.1:8000/api/dashboard/stats", {
+      const statsResponse = await fetch(`${DASHBOARD_API}/stats`, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
@@ -51,7 +51,7 @@ export default function DashboardPage() {
       })
 
       // 获取最近访问记录
-      const visitsResponse = await fetch("http://127.0.0.1:8000/visit/GOw6650TFG", {
+      const visitsResponse = await fetch(`${VISIT_API}/GOw6650TFG`, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'

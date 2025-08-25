@@ -1,5 +1,6 @@
 "use client"
 
+import { PIXELS_API } from "@/lib/config"
 import type React from "react"
 
 import { useState } from "react"
@@ -33,7 +34,7 @@ export default function CreatePixelPage() {
 
     try {
       console.log('Sending request to backend API...');
-      const response = await fetch("http://127.0.0.1:8000/api/pixels", {
+      const response = await fetch(`${PIXELS_API}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

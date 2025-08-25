@@ -1,5 +1,6 @@
 "use client"
 
+import { PIXELS_API } from "@/lib/config"
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -30,7 +31,7 @@ export default function PixelsPage() {
 
   const fetchPixels = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/pixels", {
+      const response = await fetch(`${PIXELS_API}`, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
@@ -53,7 +54,7 @@ export default function PixelsPage() {
 
   const togglePixelStatus = async (pixelId: string, currentStatus: boolean) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/pixels/${pixelId}/status`, {
+      const response = await fetch(`${PIXELS_API}/${pixelId}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -75,7 +76,7 @@ export default function PixelsPage() {
     }
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/pixels/${pixelId}`, {
+      const response = await fetch(`${PIXELS_API}/${pixelId}`, {
         method: "DELETE",
       })
 

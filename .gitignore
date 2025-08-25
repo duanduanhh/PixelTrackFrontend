@@ -5,3 +5,4 @@ deploy/docker-compose/conf
 deploy/docker-compose/data
 /vendor/
 node_modules
+.next
