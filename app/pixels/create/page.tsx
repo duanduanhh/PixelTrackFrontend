@@ -1,6 +1,5 @@
 "use client"
 
-import { PIXELS_API } from "@/lib/config"
 import type React from "react"
 
 import { useState } from "react"
@@ -9,13 +8,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Eye, Plus, ArrowLeft, Copy, Check, Home } from "lucide-react"
+import { Eye, ArrowLeft, Copy, Check, Home, Server } from "lucide-react"
+import { TRACK_URL } from "@/lib/config"
 import Link from "next/link"
 
-interface CustomField {
-  name: string
-  type: string
-  required: boolean
+interface CreatePixelResponse {
+  code: number
+  message: string
+  data: {
+    id: number
+    name: string
+    track_code: string
+    status: boolean
+    fields: any
+    created_at: string
+  }
 }
 
 export default function CreatePixelPage() {
@@ -23,7 +30,6 @@ export default function CreatePixelPage() {
     name: "",
     description: "",
   })
-  const [customFields, setCustomFields] = useState<CustomField[]>([])
   const [loading, setLoading] = useState(false)
   const [createdPixel, setCreatedPixel] = useState<any>(null)
   const [copied, setCopied] = useState(false)
@@ -33,52 +39,48 @@ export default function CreatePixelPage() {
     setLoading(true)
 
     try {
-      console.log('Sending request to backend API...');
-      const response = await fetch(`${PIXELS_API}`, {
+      console.log("🔄 Creating pixel via backend API...")
+
+      const response = await fetch("/api/backend/api/pixels", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json"
         },
-        credentials: 'include',
         body: JSON.stringify({
-          name: formData.name
+          name: formData.name,
+          description: formData.description,
         }),
-      });
-      console.log('Response status:', response.status);
+      })
+
+      console.log("📊 Response status:", response.status)
 
       if (response.ok) {
-        const pixel = await response.json()
-        setCreatedPixel(pixel)
+        const result: CreatePixelResponse = await response.json()
+        console.log("✅ Create pixel response:", result)
+
+        if (result.code === 0) {
+          setCreatedPixel(result.data)
+        } else {
+          alert(result.message || "创建像素失败")
+        }
       } else {
-        alert("创建像素失败")
+        const errorData = await response.json()
+        alert(errorData.message || "创建像素失败")
       }
     } catch (error) {
+      console.error("💥 Create pixel error:", error)
       alert("创建像素失败，请稍后重试")
     } finally {
       setLoading(false)
     }
   }
 
-  const addCustomField = () => {
-    setCustomFields([...customFields, { name: "", type: "text", required: false }])
-  }
-
-  const updateCustomField = (index: number, field: Partial<CustomField>) => {
-    const updated = [...customFields]
-    updated[index] = { ...updated[index], ...field }
-    setCustomFields(updated)
-  }
-
-  const removeCustomField = (index: number) => {
-    setCustomFields(customFields.filter((_, i) => i !== index))
-  }
-
   const copyTrackingCode = () => {
     if (!createdPixel) return
 
-    const trackingCode = `<img src="${window.location.origin}/track/${createdPixel.trackCode}" width="1" height="1" style="display:none;" />`
-    navigator.clipboard.writeText(trackingCode)
+    // Use HTTP for now, will be determined by backend requirements
+    const trackingUrl = `${TRACK_URL}/${createdPixel.track_code}`
+    navigator.clipboard.writeText(trackingUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -114,31 +116,38 @@ export default function CreatePixelPage() {
                 <Check className="h-8 w-8 text-green-600" />
               </div>
               <CardTitle className="text-2xl">像素创建成功！</CardTitle>
-              <CardDescription>您的追踪像素已经创建完成，可以开始使用了。</CardDescription>
+              <CardDescription>您的追踪像素已在后端创建完成，可以开始使用了。</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <h3 className="font-semibold mb-2">像素信息</h3>
+                <h3 className="font-semibold mb-2 flex items-center">
+                  <Server className="mr-2 h-4 w-4 text-green-600" />
+                  后端像素信息
+                </h3>
                 <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                  <p>
+                    <strong>ID:</strong> {createdPixel.id}
+                  </p>
                   <p>
                     <strong>名称:</strong> {createdPixel.name}
                   </p>
                   <p>
-                    <strong>描述:</strong> {createdPixel.description}
+                    <strong>追踪代码:</strong> {createdPixel.track_code}
                   </p>
                   <p>
-                    <strong>追踪代码:</strong> {createdPixel.trackCode}
+                    <strong>状态:</strong> {createdPixel.status ? "启用" : "停用"}
+                  </p>
+                  <p>
+                    <strong>创建时间:</strong> {new Date(createdPixel.created_at).toLocaleString()}
                   </p>
                 </div>
               </div>
 
               <div>
-                <h3 className="font-semibold mb-2">追踪代码</h3>
-                <p className="text-sm text-gray-600 mb-3">将以下代码复制到您想要追踪的网页中：</p>
+                <h3 className="font-semibold mb-2">追踪链接</h3>
+                <p className="text-sm text-gray-600 mb-3">将以下链接用于追踪访客：</p>
                 <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm relative">
-                  <code>
-                    {`<img src="${window.location.origin}/track/${createdPixel.trackCode}" width="1" height="1" style="display:none;" />`}
-                  </code>
+                  <code>{`${TRACK_URL}/${createdPixel.track_code}`}</code>
                   <Button
                     size="sm"
                     variant="outline"
@@ -160,7 +169,6 @@ export default function CreatePixelPage() {
                   onClick={() => {
                     setCreatedPixel(null)
                     setFormData({ name: "", description: "" })
-                    setCustomFields([])
                   }}
                 >
                   创建另一个
@@ -202,8 +210,11 @@ export default function CreatePixelPage() {
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle>创建追踪像素</CardTitle>
-            <CardDescription>创建一个新的追踪像素来收集访客数据和转化信息。</CardDescription>
+            <CardTitle className="flex items-center">
+              <Server className="mr-2 h-5 w-5 text-green-600" />
+              创建追踪像素
+            </CardTitle>
+            <CardDescription>在后端创建一个新的追踪像素来收集访客数据和转化信息。</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -229,56 +240,8 @@ export default function CreatePixelPage() {
                 />
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>自定义收集字段</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={addCustomField}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    添加字段
-                  </Button>
-                </div>
-
-                {customFields.map((field, index) => (
-                  <div key={index} className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                    <Input
-                      placeholder="字段名称"
-                      value={field.name}
-                      onChange={(e) => updateCustomField(index, { name: e.target.value })}
-                      className="flex-1"
-                    />
-                    <select
-                      value={field.type}
-                      onChange={(e) => updateCustomField(index, { type: e.target.value })}
-                      className="px-3 py-2 border border-gray-300 rounded-md"
-                    >
-                      <option value="text">文本</option>
-                      <option value="email">邮箱</option>
-                      <option value="tel">电话</option>
-                      <option value="number">数字</option>
-                    </select>
-                    <label className="flex items-center space-x-1">
-                      <input
-                        type="checkbox"
-                        checked={field.required}
-                        onChange={(e) => updateCustomField(index, { required: e.target.checked })}
-                      />
-                      <span className="text-sm">必填</span>
-                    </label>
-                    <Button type="button" variant="outline" size="sm" onClick={() => removeCustomField(index)}>
-                      删除
-                    </Button>
-                  </div>
-                ))}
-
-                {customFields.length === 0 && (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    暂无自定义字段，点击"添加字段"来收集额外的用户信息
-                  </p>
-                )}
-              </div>
-
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "创建中..." : "创建像素"}
+                {loading ? "正在创建..." : "创建像素"}
               </Button>
             </form>
           </CardContent>

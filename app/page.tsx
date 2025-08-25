@@ -14,11 +14,11 @@ export default function HomePage() {
             <span className="text-2xl font-bold text-gray-900">TrackPixel</span>
           </div>
           <div className="flex items-center space-x-4">
-            <Link href="/dashboard">
-              <Button variant="ghost">控制台</Button>
-            </Link>
             <Link href="/pixels">
-              <Button>像素管理</Button>
+              <Button variant="ghost">像素管理</Button>
+            </Link>
+            <Link href="/pixels/create">
+              <Button>创建像素</Button>
             </Link>
           </div>
         </div>
@@ -32,7 +32,7 @@ export default function HomePage() {
             无需注册，立即生成追踪像素，收集访客数据，实时查看统计信息
           </p>
           <div className="flex justify-center space-x-4">
-            <Link href="/dashboard">
+            <Link href="/pixels">
               <Button size="lg" className="px-8">
                 <Zap className="mr-2 h-5 w-5" />
                 立即开始使用
@@ -64,7 +64,7 @@ export default function HomePage() {
               <CardHeader>
                 <BarChart3 className="h-12 w-12 text-green-600 mb-4" />
                 <CardTitle>数据分析</CardTitle>
-                <CardDescription>实时PV、UV统计，转化率计算，渠道来源分析</CardDescription>
+                <CardDescription>实时访客统计，线索收集，转化率计算</CardDescription>
               </CardHeader>
             </Card>
 
@@ -175,10 +175,7 @@ export default function HomePage() {
                   <Link href="/pixels">像素管理</Link>
                 </li>
                 <li>
-                  <Link href="/dashboard">数据统计</Link>
-                </li>
-                <li>
-                  <Link href="/analytics">数据分析</Link>
+                  <Link href="/pixels/create">创建像素</Link>
                 </li>
               </ul>
             </div>
