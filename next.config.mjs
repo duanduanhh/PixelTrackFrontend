@@ -13,7 +13,7 @@ const nextConfig = {
     return [
       {
         source: '/api/backend/:path*',
-        destination: 'http://127.0.0.1:8000/:path*', // 统一使用配置域名
+        destination: 'http://trackback.darrel.cn/:path*', // 统一使用配置域名
       },
     ]
   },
