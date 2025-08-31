@@ -15,6 +15,12 @@ interface Visit {
   id: number
   pixel_id: number
   ip: string
+  country?: string
+  city?: string
+  browser?: string
+  os?: string
+  user_agent?: string
+  referer?: string
   email: string
   phone: string
   name: string
@@ -141,7 +147,7 @@ export default function PixelAnalyticsPage() {
       return
     }
 
-    const headers = ["ID", "像素ID", "IP地址", "邮箱", "电话", "姓名", "留言", "访问时间"]
+    const headers = ["ID", "像素ID", "IP地址", "国家", "城市", "浏览器", "操作系统", "用户代理", "来源页面", "邮箱", "电话", "姓名", "留言", "访问时间"]
     const csvContent = [
       headers.join(","),
       ...data.visits.map((visit) =>
@@ -149,6 +155,12 @@ export default function PixelAnalyticsPage() {
           visit.id,
           visit.pixel_id,
           visit.ip,
+          visit.country || "",
+          visit.city || "",
+          visit.browser || "",
+          visit.os || "",
+          `"${(visit.user_agent || "").replace(/"/g, '""')}"`,
+          visit.referer || "",
           visit.email || "",
           visit.phone || "",
           visit.name || "",
@@ -318,6 +330,80 @@ export default function PixelAnalyticsPage() {
           </Card>
         </div>
 
+        {/* Additional Stats */}
+        {data.visits.length > 0 && (
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">浏览器分布</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {(() => {
+                    const browserStats = data.visits.reduce((acc, visit) => {
+                      if (visit.browser) {
+                        acc[visit.browser] = (acc[visit.browser] || 0) + 1
+                      }
+                      return acc
+                    }, {} as Record<string, number>)
+                    
+                    const topBrowsers = Object.entries(browserStats)
+                      .sort(([,a], [,b]) => b - a)
+                      .slice(0, 3)
+                    
+                    return topBrowsers.length > 0 ? (
+                      topBrowsers.map(([browser, count]) => (
+                        <div key={browser} className="flex items-center justify-between">
+                          <span className="text-sm">{browser}</span>
+                          <Badge variant="secondary">{count}</Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-400">暂无浏览器数据</span>
+                    )
+                  })()}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">地理位置分布</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {(() => {
+                    const locationStats = data.visits.reduce((acc, visit) => {
+                      if (visit.country || visit.city) {
+                        const location = visit.city ? `${visit.city}, ${visit.country}` : visit.country
+                        if (location) {
+                          acc[location] = (acc[location] || 0) + 1
+                        }
+                      }
+                      return acc
+                    }, {} as Record<string, number>)
+                    
+                    const topLocations = Object.entries(locationStats)
+                      .sort(([,a], [,b]) => b - a)
+                      .slice(0, 3)
+                    
+                    return topLocations.length > 0 ? (
+                      topLocations.map(([location, count]) => (
+                        <div key={location} className="flex items-center justify-between">
+                          <span className="text-sm">{location}</span>
+                          <Badge variant="secondary">{count}</Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-400">暂无地理位置数据</span>
+                    )
+                  })()}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Visitor Data Table */}
         <Card>
           <CardHeader>
@@ -380,6 +466,11 @@ export default function PixelAnalyticsPage() {
                     <TableHead>ID</TableHead>
                     <TableHead>像素ID</TableHead>
                     <TableHead>IP地址</TableHead>
+                    <TableHead>国家</TableHead>
+                    <TableHead>城市</TableHead>
+                    <TableHead>浏览器</TableHead>
+                    <TableHead>操作系统</TableHead>
+                    <TableHead>来源页面</TableHead>
                     <TableHead>邮箱</TableHead>
                     <TableHead>电话</TableHead>
                     <TableHead>姓名</TableHead>
@@ -394,6 +485,43 @@ export default function PixelAnalyticsPage() {
                         <TableCell className="font-mono">{visit.id}</TableCell>
                         <TableCell className="font-mono">{visit.pixel_id}</TableCell>
                         <TableCell className="font-mono">{visit.ip}</TableCell>
+                        <TableCell>
+                          {visit.country ? (
+                            <Badge variant="outline">{visit.country}</Badge>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {visit.city ? (
+                            <Badge variant="outline">{visit.city}</Badge>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {visit.browser ? (
+                            <Badge variant="outline">{visit.browser}</Badge>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {visit.os ? (
+                            <Badge variant="outline">{visit.os}</Badge>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate" title={visit.referer}>
+                          {visit.referer ? (
+                            <a href={visit.referer} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                              {visit.referer}
+                            </a>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           {visit.email ? (
                             <Badge variant="outline">{visit.email}</Badge>
@@ -417,7 +545,7 @@ export default function PixelAnalyticsPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8">
+                      <TableCell colSpan={13} className="text-center py-8">
                         <div className="text-gray-500">后端暂无该像素的访客数据</div>
                         <p className="text-sm text-gray-400 mt-2">当有用户访问追踪链接时，数据将实时显示在这里</p>
                       </TableCell>

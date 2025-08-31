@@ -1,12 +1,18 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 // 真实的访问数据存储 - 生产环境中这应该是数据库
-// 这里只保留您提供的真实示例数据
+// 这里只保留您提供的真实示例数据，并添加新字段
 const realVisits = [
   {
     id: 1,
     pixel_id: 1,
     ip: "127.0.0.1",
+    country: "中国",
+    city: "北京",
+    browser: "Chrome",
+    os: "Windows",
+    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    referer: "https://example.com",
     email: "duanduan0820@126.com",
     phone: "15039021712",
     name: "duanzhiwei",
@@ -94,11 +100,17 @@ export async function POST(request: NextRequest, { params }: { params: { trackCo
       )
     }
 
-    // 创建新的访问记录
+    // 创建新的访问记录，包含所有新字段
     const newVisit = {
       id: realVisits.length + 1,
       pixel_id: pixel.id,
       ip: visitData.ip || "unknown",
+      country: visitData.country || "",
+      city: visitData.city || "",
+      browser: visitData.browser || "",
+      os: visitData.os || "",
+      user_agent: visitData.user_agent || "",
+      referer: visitData.referer || "",
       email: visitData.email || "",
       phone: visitData.phone || "",
       name: visitData.name || "",
