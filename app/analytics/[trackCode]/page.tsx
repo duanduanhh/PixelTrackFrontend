@@ -16,7 +16,6 @@ interface Visit {
   pixel_id: number
   ip: string
   country?: string
-  city?: string
   browser?: string
   os?: string
   user_agent?: string
@@ -147,7 +146,7 @@ export default function PixelAnalyticsPage() {
       return
     }
 
-    const headers = ["ID", "像素ID", "IP地址", "国家", "城市", "浏览器", "操作系统", "用户代理", "来源页面", "邮箱", "电话", "姓名", "留言", "访问时间"]
+    const headers = ["ID", "像素ID", "IP地址", "国家", "浏览器", "操作系统", "用户代理", "来源页面", "邮箱", "电话", "姓名", "留言", "访问时间"]
     const csvContent = [
       headers.join(","),
       ...data.visits.map((visit) =>
@@ -156,7 +155,6 @@ export default function PixelAnalyticsPage() {
           visit.pixel_id,
           visit.ip,
           visit.country || "",
-          visit.city || "",
           visit.browser || "",
           visit.os || "",
           `"${(visit.user_agent || "").replace(/"/g, '""')}"`,
@@ -368,34 +366,31 @@ export default function PixelAnalyticsPage() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">地理位置分布</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">国家分布</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   {(() => {
-                    const locationStats = data.visits.reduce((acc, visit) => {
-                      if (visit.country || visit.city) {
-                        const location = visit.city ? `${visit.city}, ${visit.country}` : visit.country
-                        if (location) {
-                          acc[location] = (acc[location] || 0) + 1
-                        }
+                    const countryStats = data.visits.reduce((acc, visit) => {
+                      if (visit.country) {
+                        acc[visit.country] = (acc[visit.country] || 0) + 1
                       }
                       return acc
                     }, {} as Record<string, number>)
                     
-                    const topLocations = Object.entries(locationStats)
+                    const topCountries = Object.entries(countryStats)
                       .sort(([,a], [,b]) => b - a)
                       .slice(0, 3)
                     
-                    return topLocations.length > 0 ? (
-                      topLocations.map(([location, count]) => (
-                        <div key={location} className="flex items-center justify-between">
-                          <span className="text-sm">{location}</span>
+                    return topCountries.length > 0 ? (
+                      topCountries.map(([country, count]) => (
+                        <div key={country} className="flex items-center justify-between">
+                          <span className="text-sm">{country}</span>
                           <Badge variant="secondary">{count}</Badge>
                         </div>
                       ))
                     ) : (
-                      <span className="text-sm text-gray-400">暂无地理位置数据</span>
+                      <span className="text-sm text-gray-400">暂无国家数据</span>
                     )
                   })()}
                 </div>
@@ -467,7 +462,6 @@ export default function PixelAnalyticsPage() {
                     <TableHead>像素ID</TableHead>
                     <TableHead>IP地址</TableHead>
                     <TableHead>国家</TableHead>
-                    <TableHead>城市</TableHead>
                     <TableHead>浏览器</TableHead>
                     <TableHead>操作系统</TableHead>
                     <TableHead>来源页面</TableHead>
@@ -488,13 +482,6 @@ export default function PixelAnalyticsPage() {
                         <TableCell>
                           {visit.country ? (
                             <Badge variant="outline">{visit.country}</Badge>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {visit.city ? (
-                            <Badge variant="outline">{visit.city}</Badge>
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
@@ -545,7 +532,7 @@ export default function PixelAnalyticsPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={13} className="text-center py-8">
+                      <TableCell colSpan={12} className="text-center py-8">
                         <div className="text-gray-500">后端暂无该像素的访客数据</div>
                         <p className="text-sm text-gray-400 mt-2">当有用户访问追踪链接时，数据将实时显示在这里</p>
                       </TableCell>

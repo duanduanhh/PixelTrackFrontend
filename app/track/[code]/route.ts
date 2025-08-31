@@ -39,9 +39,8 @@ export async function GET(request: NextRequest, { params }: { params: { code: st
       referer,
       browser,
       os,
-      // 注意：country和city需要通过IP地理位置服务获取，这里暂时留空
+      // 注意：country需要通过IP地理位置服务获取，这里暂时留空
       country: "",
-      city: "",
       timestamp: new Date().toISOString(),
     }
 
@@ -120,9 +119,8 @@ export async function POST(request: NextRequest, { params }: { params: { code: s
       phone: formData.phone || "",
       name: formData.name || "",
       msg: formData.msg || "",
-      // 注意：country和city需要通过IP地理位置服务获取，这里暂时留空
+      // 注意：country需要通过IP地理位置服务获取，这里暂时留空
       country: "",
-      city: "",
       timestamp: new Date().toISOString(),
     }
 
