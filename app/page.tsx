@@ -1,9 +1,24 @@
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { BarChart3, Eye, MousePointer, TrendingUp, Zap } from "lucide-react"
 import Link from "next/link"
+import { useEffect, useState } from "react"
+import PasswordProtect from "@/components/auth/PasswordProtect"
 
 export default function HomePage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    // 检查sessionStorage中是否有认证标记
+    const auth = sessionStorage.getItem("isAuthenticated")
+    setIsAuthenticated(auth === "true")
+  }, [])
+
+  if (!isAuthenticated && process.env.NEXT_PUBLIC_HOME_PASSWORD) {
+    return <PasswordProtect />
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
