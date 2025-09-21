@@ -1,5 +1,3 @@
-import { API_BASE_URL } from './lib/config.ts'
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -12,10 +10,13 @@ const nextConfig = {
     unoptimized: true,
   },
   async rewrites() {
+    // 使用与前端一致的环境变量
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+    
     return [
       {
         source: '/api/backend/:path*',
-        destination: `${API_BASE_URL}/:path*`, // 使用配置文件中的 API 地址
+        destination: `${apiBaseUrl}/:path*`,
       },
     ]
   },

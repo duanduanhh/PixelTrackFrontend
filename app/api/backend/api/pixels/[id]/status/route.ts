@@ -1,13 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { API_BASE_URL } from "@/lib/config"
 
-const BACKEND_URL = API_BASE_URL
-
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await request.json()
     const pixelId = params.id
-    const url = `${BACKEND_URL}/api/pixels/${pixelId}/status`
+    const url = `${API_BASE_URL}/api/pixels/${pixelId}/status`
 
     console.log("🔄 Proxying PUT request to backend:", url)
 

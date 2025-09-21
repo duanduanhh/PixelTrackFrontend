@@ -1,14 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { API_BASE_URL } from "@/lib/config"
 
-const BACKEND_URL = API_BASE_URL
-
 export async function GET(request: NextRequest, { params }: { params: { trackCode: string } }) {
   try {
     const trackCode = params.trackCode
     const { searchParams } = new URL(request.url)
     const queryString = searchParams.toString()
-    const url = `${BACKEND_URL}/visit/${trackCode}${queryString ? `?${queryString}` : ""}`
+    const url = `${API_BASE_URL}/visit/${trackCode}${queryString ? `?${queryString}` : ""}`
 
     console.log("🔄 Proxying request to backend:", url)
 
@@ -65,7 +63,7 @@ export async function GET(request: NextRequest, { params }: { params: { trackCod
       return NextResponse.json(
         {
           code: 1,
-          message: `无法连接到后端服务 ${BACKEND_URL} - 请确认后端服务正在运行`,
+          message: `无法连接到后端服务 ${API_BASE_URL} - 请确认后端服务正在运行`,
           data: null,
         },
         { status: 503 },
@@ -98,7 +96,7 @@ export async function POST(request: NextRequest, { params }: { params: { trackCo
   try {
     const trackCode = params.trackCode
     const body = await request.json()
-    const url = `${BACKEND_URL}/visit/${trackCode}`
+    const url = `${API_BASE_URL}/visit/${trackCode}`
 
     console.log("🔄 Proxying POST request to backend:", url)
     console.log("📤 Request body:", body)

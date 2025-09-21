@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { Eye, Home, Download, ArrowLeft, RefreshCw, CheckCircle, Server, Clock, AlertTriangle } from "lucide-react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
+import { API_BASE_URL } from "@/lib/config"
 
 interface Visit {
   id: number
@@ -42,8 +43,8 @@ interface ApiResponse {
 }
 
 export default function PixelAnalyticsPage() {
-  const params = useParams()
-  const trackCode = params.trackCode as string
+  const searchParams = useSearchParams()
+  const trackCode = searchParams.get('trackCode') || ''
 
   const [data, setData] = useState<VisitData>({
     visits: [],
@@ -87,7 +88,7 @@ export default function PixelAnalyticsPage() {
         pageSize: pageSize.toString(),
       })
 
-      const apiUrl = `/api/backend/visit/${trackCode}?${params}`
+      const apiUrl = `${API_BASE_URL}/visit/${trackCode}?${params}`
       console.log("🔄 Requesting visit data from backend:", apiUrl)
 
       const response = await fetch(apiUrl, {

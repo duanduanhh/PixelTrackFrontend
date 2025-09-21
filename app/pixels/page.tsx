@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { API_BASE_URL, TRACK_URL } from "@/lib/config"
+import { API_BASE_URL } from "@/lib/config"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -95,7 +95,7 @@ export default function PixelsPage() {
     try {
       console.log("🔄 Fetching pixels from backend API...")
 
-      const response = await fetch("/api/backend/api/pixels", {
+      const response = await fetch(`${API_BASE_URL}/api/pixels`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -195,7 +195,7 @@ export default function PixelsPage() {
   const testBackendDirectly = async () => {
     try {
       console.log("🧪 Testing HTTPS backend directly...")
-      const response = await fetch(`${API_BASE_URL.replace(/^http:/, 'https:')}/api/pixels`, {
+      const response = await fetch("/api/backend/api/pixels", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -212,7 +212,7 @@ export default function PixelsPage() {
       // Try HTTP
       try {
         console.log("🧪 Testing HTTP backend directly...")
-        const response = await fetch(`${API_BASE_URL.replace(/^https:/, 'http:')}/api/pixels`, {
+        const response = await fetch(`${API_BASE_URL}/api/pixels`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -234,7 +234,7 @@ export default function PixelsPage() {
       const newStatus = currentStatus ? 0 : 1 // 0 = 停用, 1 = 启用
       console.log(`🔄 Toggling pixel ${pixelId} status from ${currentStatus ? '启用' : '停用'} to ${newStatus ? '启用' : '停用'}`)
       
-      const response = await fetch(`/api/backend/api/pixels/${pixelId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/api/pixels/${pixelId}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -272,7 +272,7 @@ export default function PixelsPage() {
 
     try {
       console.log(`🗑️ Deleting pixel ${pixelId}`)
-      const response = await fetch(`/api/backend/api/pixels/${pixelId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/pixels/${pixelId}`, {
         method: "DELETE",
       })
 
@@ -293,7 +293,7 @@ export default function PixelsPage() {
 
   const copyTrackingCode = async (pixel: Pixel) => {
     try {
-      const trackingUrl = `${TRACK_URL}/${pixel.track_code}`
+      const trackingUrl = `${API_BASE_URL}/track/${pixel.track_code}`
       if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
         await navigator.clipboard.writeText(trackingUrl)
         alert('追踪链接已复制到剪贴板')
@@ -341,7 +341,7 @@ export default function PixelsPage() {
   }
 
   const viewAnalytics = (trackCode: string) => {
-    router.push(`/analytics/${trackCode}`)
+    router.push(`/analytics/trackCode?trackCode=${trackCode}`)
   }
 
   const openEditDialog = (pixel: Pixel) => {
@@ -370,7 +370,7 @@ export default function PixelsPage() {
     try {
       console.log(`🔄 Updating pixel ${editingPixel.id}...`)
       
-      const response = await fetch(`/api/backend/api/pixels/${editingPixel.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/pixels/${editingPixel.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

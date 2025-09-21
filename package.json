@@ -5,6 +5,13 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
+    "dev:env": "node scripts/use-env.js dev",
+    "build:env": "node scripts/use-env.js build",
+    "dev:local": "cp env.development .env.local && next dev",
+    "dev:staging": "cp env.staging .env.local && next dev",
+    "dev:production": "cp env.production .env.local && next dev",
+    "build:staging": "cp env.staging .env.local && next build",
+    "build:production": "cp env.production .env.local && next build",
     "lint": "next lint",
     "start": "next start"
   },

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Eye, ArrowLeft, Copy, Check, Home, Server } from "lucide-react"
-import { TRACK_URL } from "@/lib/config"
+import { API_BASE_URL } from "@/lib/config"
 import Link from "next/link"
 
 interface CreatePixelResponse {
@@ -42,7 +42,7 @@ export default function CreatePixelPage() {
     try {
       console.log("🔄 Creating pixel via backend API...")
 
-      const response = await fetch("/api/backend/api/pixels", {
+      const response = await fetch(`${API_BASE_URL}/api/pixels`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -81,7 +81,7 @@ export default function CreatePixelPage() {
     if (!createdPixel) return
 
     // Use HTTP for now, will be determined by backend requirements
-    const trackingUrl = `${TRACK_URL}/${createdPixel.track_code}`
+    const trackingUrl = `${API_BASE_URL}/track/${createdPixel.track_code}`
     navigator.clipboard.writeText(trackingUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -154,7 +154,7 @@ export default function CreatePixelPage() {
                 <h3 className="font-semibold mb-2">追踪链接</h3>
                 <p className="text-sm text-gray-600 mb-3">将以下链接用于追踪访客：</p>
                 <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm relative">
-                  <code>{`${TRACK_URL}/${createdPixel.track_code}`}</code>
+                  <code>{`${API_BASE_URL}/track/${createdPixel.track_code}`}</code>
                   <Button
                     size="sm"
                     variant="outline"

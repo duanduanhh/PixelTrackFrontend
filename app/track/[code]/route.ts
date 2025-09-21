@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { API_BASE_URL } from "@/lib/config"
 
 // 简单的浏览器和操作系统检测
 function detectBrowserAndOS(userAgent: string) {
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest, { params }: { params: { code: st
 
     // 尝试保存到visit接口（异步，不阻塞像素返回）
     try {
-      fetch(`${request.nextUrl.origin}/api/visit/${trackCode}`, {
+      fetch(`${API_BASE_URL}/visit/${trackCode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(visitData),
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest, { params }: { params: { code: s
 
     // 保存到visit接口
     try {
-      const response = await fetch(`${request.nextUrl.origin}/api/visit/${trackCode}`, {
+      const response = await fetch(`${API_BASE_URL}/visit/${trackCode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(visitData),
