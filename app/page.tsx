@@ -79,53 +79,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats Preview */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">实时数据统计</h2>
-          <div className="grid md:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">总页面浏览量</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">1,234,567</div>
-                <p className="text-xs text-green-600">+12.5% 较上月</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">独立访客</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">89,123</div>
-                <p className="text-xs text-green-600">+8.2% 较上月</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">转化率</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">3.45%</div>
-                <p className="text-xs text-red-600">-0.3% 较上月</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">活跃像素</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">156</div>
-                <p className="text-xs text-green-600">+23 较上月</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
 
       {/* How it works */}
       <section className="py-16 bg-white">

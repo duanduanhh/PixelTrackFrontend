@@ -29,6 +29,7 @@ export default function CreatePixelPage() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    email: "",
   })
   const [loading, setLoading] = useState(false)
   const [createdPixel, setCreatedPixel] = useState<any>(null)
@@ -49,6 +50,7 @@ export default function CreatePixelPage() {
         body: JSON.stringify({
           name: formData.name,
           description: formData.description,
+          email: formData.email,
         }),
       })
 
@@ -140,6 +142,11 @@ export default function CreatePixelPage() {
                   <p>
                     <strong>创建时间:</strong> {new Date(createdPixel.created_at).toLocaleString()}
                   </p>
+                  {createdPixel.email && (
+                    <p>
+                      <strong>通知邮箱:</strong> {createdPixel.email}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -168,7 +175,7 @@ export default function CreatePixelPage() {
                   className="flex-1 bg-transparent"
                   onClick={() => {
                     setCreatedPixel(null)
-                    setFormData({ name: "", description: "" })
+                    setFormData({ name: "", description: "", email: "" })
                   }}
                 >
                   创建另一个
@@ -238,6 +245,18 @@ export default function CreatePixelPage() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">通知邮箱</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="例如：admin@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+                <p className="text-sm text-gray-500">可选：当有新的访问或转化时，将发送通知到此邮箱</p>
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>

@@ -1,3 +1,5 @@
+import { API_BASE_URL } from './lib/config.ts'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -13,7 +15,7 @@ const nextConfig = {
     return [
       {
         source: '/api/backend/:path*',
-        destination: 'http://trackback.darrel.cn/:path*', // 统一使用配置域名
+        destination: `${API_BASE_URL}/:path*`, // 使用配置文件中的 API 地址
       },
     ]
   },

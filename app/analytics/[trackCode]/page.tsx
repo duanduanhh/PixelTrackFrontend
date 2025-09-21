@@ -168,7 +168,9 @@ export default function PixelAnalyticsPage() {
       ),
     ].join("\n")
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    // 添加UTF-8 BOM以解决Excel中文乱码问题
+    const csvWithBOM = "\uFEFF" + csvContent
+    const blob = new Blob([csvWithBOM], { type: "text/csv;charset=utf-8;" })
     const link = document.createElement("a")
     const url = URL.createObjectURL(blob)
     link.setAttribute("href", url)
@@ -222,9 +224,6 @@ export default function PixelAnalyticsPage() {
   }
 
   const totalPages = data.totalPages || Math.ceil(data.total / pageSize)
-  const visitsArray = Array.isArray(data.visits) ? data.visits : []
-  const validLeads = visitsArray.filter((v) => v.email || v.phone).length
-  const conversionRate = data.total > 0 ? (validLeads / data.total) * 100 : 0
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -296,7 +295,7 @@ export default function PixelAnalyticsPage() {
         </div>
 
         {/* Summary Stats */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">总访问量</CardTitle>
@@ -307,63 +306,7 @@ export default function PixelAnalyticsPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">有效线索</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{validLeads}</div>
-              <p className="text-xs text-blue-600">包含联系方式的访客</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">转化率</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{conversionRate.toFixed(1)}%</div>
-              <p className="text-xs text-purple-600">线索转化率</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Additional Stats */}
-        {data.visits.length > 0 && (
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">浏览器分布</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {(() => {
-                    const browserStats = data.visits.reduce((acc, visit) => {
-                      if (visit.browser) {
-                        acc[visit.browser] = (acc[visit.browser] || 0) + 1
-                      }
-                      return acc
-                    }, {} as Record<string, number>)
-                    
-                    const topBrowsers = Object.entries(browserStats)
-                      .sort(([,a], [,b]) => b - a)
-                      .slice(0, 3)
-                    
-                    return topBrowsers.length > 0 ? (
-                      topBrowsers.map(([browser, count]) => (
-                        <div key={browser} className="flex items-center justify-between">
-                          <span className="text-sm">{browser}</span>
-                          <Badge variant="secondary">{count}</Badge>
-                        </div>
-                      ))
-                    ) : (
-                      <span className="text-sm text-gray-400">暂无浏览器数据</span>
-                    )
-                  })()}
-                </div>
-              </CardContent>
-            </Card>
-
+          {data.visits.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600">国家分布</CardTitle>
@@ -396,8 +339,8 @@ export default function PixelAnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Visitor Data Table */}
         <Card>

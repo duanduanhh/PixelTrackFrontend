@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   Eye,
   Plus,
@@ -35,9 +36,10 @@ interface Pixel {
   id: number
   name: string
   track_code: string
-  status: boolean
+  status: boolean | number
   fields: any
   created_at: string
+  email?: string
 }
 
 interface ApiResponse {
@@ -56,6 +58,13 @@ export default function PixelsPage() {
   const [isHttpsRequired, setIsHttpsRequired] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [autoRefresh, setAutoRefresh] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingPixel, setEditingPixel] = useState<Pixel | null>(null)
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    email: "",
+  })
+  const [editLoading, setEditLoading] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -222,22 +231,32 @@ export default function PixelsPage() {
 
   const togglePixelStatus = async (pixelId: number, currentStatus: boolean) => {
     try {
-      console.log(`🔄 Toggling pixel ${pixelId} status to ${!currentStatus}`)
+      const newStatus = currentStatus ? 0 : 1 // 0 = 停用, 1 = 启用
+      console.log(`🔄 Toggling pixel ${pixelId} status from ${currentStatus ? '启用' : '停用'} to ${newStatus ? '启用' : '停用'}`)
+      
       const response = await fetch(`/api/backend/api/pixels/${pixelId}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status: !currentStatus }),
+        body: JSON.stringify({ status: newStatus }),
       })
+
+      console.log("📊 Status update response status:", response.status)
 
       if (response.ok) {
         const result = await response.json()
         console.log("✅ Status updated:", result)
-        // Refresh the list to get updated data
-        fetchPixels()
+        
+        if (result.code === 0) {
+          // Refresh the list to get updated data
+          fetchPixels()
+        } else {
+          alert(result.message || "更新状态失败")
+        }
       } else {
         const errorData = await response.json()
+        console.error("❌ Status update failed:", errorData)
         alert(errorData.message || "更新状态失败")
       }
     } catch (error) {
@@ -323,6 +342,62 @@ export default function PixelsPage() {
 
   const viewAnalytics = (trackCode: string) => {
     router.push(`/analytics/${trackCode}`)
+  }
+
+  const openEditDialog = (pixel: Pixel) => {
+    setEditingPixel(pixel)
+    setEditFormData({
+      name: pixel.name,
+      email: pixel.email || "",
+    })
+    setEditDialogOpen(true)
+  }
+
+  const closeEditDialog = () => {
+    setEditDialogOpen(false)
+    setEditingPixel(null)
+    setEditFormData({
+      name: "",
+      email: "",
+    })
+    setEditLoading(false)
+  }
+
+  const handleEditSubmit = async () => {
+    if (!editingPixel) return
+
+    setEditLoading(true)
+    try {
+      console.log(`🔄 Updating pixel ${editingPixel.id}...`)
+      
+      const response = await fetch(`/api/backend/api/pixels/${editingPixel.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: editFormData.name,
+          email: editFormData.email || null,
+        }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log("✅ Pixel updated:", result)
+        
+        // Refresh the list to get updated data
+        fetchPixels()
+        closeEditDialog()
+      } else {
+        const errorData = await response.json()
+        alert(errorData.message || "更新像素失败")
+      }
+    } catch (error) {
+      console.error("Failed to update pixel:", error)
+      alert("更新像素失败，请稍后重试")
+    } finally {
+      setEditLoading(false)
+    }
   }
 
   const filteredPixels = pixels.filter((pixel) => pixel.name.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -562,6 +637,7 @@ export default function PixelsPage() {
                   <TableHead>名称</TableHead>
                   <TableHead>追踪代码</TableHead>
                   <TableHead>状态</TableHead>
+                  <TableHead>通知邮箱</TableHead>
                   <TableHead>创建时间</TableHead>
                   <TableHead className="text-right w-32">操作</TableHead>
                 </TableRow>
@@ -578,7 +654,16 @@ export default function PixelsPage() {
                       </TableCell>
                       <TableCell className="font-mono text-sm">{pixel.track_code}</TableCell>
                       <TableCell>
-                        <Badge variant={pixel.status ? "default" : "secondary"}>{pixel.status ? "启用" : "停用"}</Badge>
+                        <Badge variant={pixel.status ? "default" : "secondary"}>
+                          {pixel.status ? "启用" : "停用"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {pixel.email ? (
+                          <span className="text-sm text-blue-600">{pixel.email}</span>
+                        ) : (
+                          <span className="text-sm text-gray-400">未设置</span>
+                        )}
                       </TableCell>
                       <TableCell>{new Date(pixel.created_at).toLocaleString()}</TableCell>
                       <TableCell className="text-right">
@@ -603,7 +688,7 @@ export default function PixelsPage() {
                                 <Copy className="mr-2 h-4 w-4" />
                                 复制追踪代码
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => togglePixelStatus(pixel.id, pixel.status)}>
+                              <DropdownMenuItem onClick={() => togglePixelStatus(pixel.id, !!pixel.status)}>
                                 {pixel.status ? (
                                   <>
                                     <PowerOff className="mr-2 h-4 w-4" />
@@ -616,7 +701,7 @@ export default function PixelsPage() {
                                   </>
                                 )}
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openEditDialog(pixel)}>
                                 <Edit className="mr-2 h-4 w-4" />
                                 编辑
                               </DropdownMenuItem>
@@ -632,7 +717,7 @@ export default function PixelsPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
+                    <TableCell colSpan={7} className="text-center py-8">
                       <div className="text-gray-500 mb-4">{searchTerm ? "没有找到匹配的像素" : "后端暂无像素数据"}</div>
                       {!searchTerm && (
                         <Link href="/pixels/create">
@@ -649,6 +734,53 @@ export default function PixelsPage() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Edit Pixel Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>编辑像素</DialogTitle>
+              <DialogDescription>
+                修改像素的名称和通知邮箱设置
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="edit-name" className="text-right">
+                  名称
+                </label>
+                <Input
+                  id="edit-name"
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  className="col-span-3"
+                  placeholder="像素名称"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="edit-email" className="text-right">
+                  通知邮箱
+                </label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editFormData.email}
+                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                  className="col-span-3"
+                  placeholder="admin@example.com"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={closeEditDialog}>
+                取消
+              </Button>
+              <Button onClick={handleEditSubmit} disabled={editLoading || !editFormData.name.trim()}>
+                {editLoading ? "保存中..." : "保存更改"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
